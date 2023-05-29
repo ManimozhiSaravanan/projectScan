@@ -1,0 +1,154 @@
+﻿@page "/report"
+@attribute [Authorize(Roles = "Administrator,User")]
+@using BAApp.Model
+@using BAApp.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext DbContext
+
+
+
+<h3 class="text-center">Blood Test Report</h3>
+<div class="search-bar">
+    <input type="text" @bind="@SearchPatientId" placeholder="Enter Patient ID" />
+    <button @onclick="SearchPatient">Search</button>
+</div>
+@if (IsPatientFound)
+{
+    <form >
+     <div class="container "> 
+    <div class="header">
+        
+        <div class="logo">
+            <img src="css/images/balogo.jpg" alt="Logo" />
+        </div>
+
+                @if (!string.IsNullOrEmpty(SelectedBloodType))
+                {
+                    <h4 class="text-center"><strong>@SelectedBloodType</strong></h4>
+                }
+        
+        <div class="company-address">
+            <h4>Cindrella Scan center</h4>
+            <p>13 MainRoad </p>
+            <p>Cheyyar, Tvm District</p>
+            <p>Email: manisarmee97@gmail.com</p>
+            <p>Phone: +91 900-456-7890</p>
+        </div>
+       </div>
+       </div>
+        <hr /> <hr />
+
+    <div class="patient-info">
+        <p><strong>Patient Name:</strong> @SelectedPatient.PName</p>
+        <p><strong>Age:</strong> @SelectedPatient.PAge</p>
+        <p><strong>Appointment Date:</strong> @SelectedPatient.AppDateTime</p>
+    </div>
+
+
+    <table class="test-results table-striped  ">
+        <thead>
+               
+            <tr>
+                <th>Test Name</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sampleDetail in SelectedPatient.SampleDetails)
+            {
+                <tr>
+                    
+                    <td>@sampleDetail.Sample</td>
+                    <td>@sampleDetail.Result</td>
+                </tr>
+            }
+        </tbody>
+        </table>
+        
+        </form>
+    }
+   
+else if (IsSearchPerformed)
+{
+    <p>No patient found with the given ID.</p>
+}
+
+<style>
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    .container{
+        background-color:antiquewhite;
+    }
+    .logo img {
+        max-height: 250px;
+    }
+
+    .company-address {
+        text-align: right;
+        float:right;
+    }
+
+    .patient-info {
+        float: right;
+        text-align:left;
+    }
+
+    .test-results {
+        margin-top: 20px;
+        width: 100%;
+    }
+
+   
+</style>
+
+@code {
+    
+
+    public List<Appointment> Appointments { get; set; }
+
+    public List<SampleDetail> SampleDetails { get; set; }
+
+    private Appointment selectedAppointment { get; set; }
+
+    string SearchPatientId { get; set; }
+    bool IsPatientFound { get; set; }
+    bool IsSearchPerformed { get; set; }
+    string SelectedBloodType { get; set; }
+
+
+
+    Appointment SelectedPatient { get; set; }
+
+
+    async Task SearchPatient()
+    {
+        IsPatientFound = false;
+        SelectedPatient = null;
+
+        if (!string.IsNullOrEmpty(SearchPatientId))
+        {
+            
+
+         
+           SelectedPatient = await DbContext.Appointments
+                 .Include(a => a.SampleDetails)
+                .FirstOrDefaultAsync(a => a.Id == int.Parse(SearchPatientId));
+
+            if (SelectedPatient != null)
+            {
+                IsPatientFound = true;
+            }
+        }
+
+        IsSearchPerformed = true;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+       // Appointments = DbContext?.Appointments?.ToList();
+        Appointments = await DbContext.Appointments.ToListAsync();
+
+    }
+}

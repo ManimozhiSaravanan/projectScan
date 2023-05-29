@@ -1,0 +1,108 @@
+﻿@using BAApp.Model
+@using BAApp.Data
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using System.Security.Claims
+
+@page "/appointments"
+@attribute [Authorize(Roles = "Administrator,User")]
+<PageTitle>Appointments</PageTitle>
+
+<h1>Appointments</h1>
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Patient Name</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Appointment Date</th>
+            <th>Created Date</th>
+            <th>Action</th>
+            <th>Print</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var appointment in Appointments)
+        {
+            <tr>
+                <td>@appointment.Id</td>
+                <td>@appointment.Type</td>
+                <td>@appointment.Cat</td>
+                <td>@appointment.PName</td>
+                <td>@appointment.PAge</td>
+                <td>@appointment.PGender</td>
+                <td>@appointment.PEmail</td>
+                <td>@appointment.Status</td>
+                <td>@appointment.AppDateTime</td>
+                <td>@appointment.CreatedDateTime</td>
+                <td><button onclick=@(() => ShowMessage(appointment) )>Show Sample</button></td>
+              
+         
+            </tr>
+        }
+    </tbody>
+</table>
+      
+
+
+@code {
+    private List<Appointment> Appointments { get; set; }
+    private Appointment selectedAppointment { get; set; }
+
+    [Inject]
+    public ApplicationDbContext DbContext { get; set; }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+
+
+
+
+
+    protected override void OnInitialized()
+    {
+        LoadAppointments();
+    }
+
+    public async void ShowMessage(Appointment appointment)
+    {
+        var sample = DbContext.SampleDetails.FirstOrDefault(x => x.AppointmentId == appointment.Id);
+
+        if (sample == null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "We doesn't have sample information");
+        }
+        else
+        {
+            string message = $"Sample Information : {sample.Sample} \n \n Result: {sample.Result}";
+
+
+            await JSRuntime.InvokeVoidAsync("alert", message);
+
+        }
+    }
+
+    private void LoadAppointments()
+    {
+        Appointments = DbContext?.Appointments?.ToList();
+
+
+    }
+ 
+
+
+
+}
+   

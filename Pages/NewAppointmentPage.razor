@@ -1,0 +1,150 @@
+﻿@using BAApp.Model
+@using BAApp.Data
+@inject IJSRuntime js
+
+@page "/new-appointment"
+
+<PageTitle>New Appointment</PageTitle>
+
+        <h1 class="mt-4">New Appointment</h1>
+ <div class="container mt-2 form-container">
+    <div class="row">
+         <div class="col-lg-4 offset-lg-4 pt-1 pb-2 border rounded-lg bg-light shadow">
+            <div class="mb-2">
+                <label for="categoryInput" class="form-label">Category</label>
+                     <select type="text" class="form-select" id="categorySelect" @onchange="OnCatChange" required>
+                         @foreach (var item in Cats)
+                           {
+                             <option value="@item">@item</option>
+                           }
+
+                     </select>
+              </div>
+              <div class="mb-2">
+                   <label for="typeInput" class="form-label">Type</label>
+                      <select type="text" class="form-select " id="typeSelect" @onchange="OnTypeChange" required>
+                         @foreach (var item in Types)
+                             {
+                                   <option value="@item" >@item</option>
+                             }
+
+                        </select>
+               </div>
+                <div class="mb-2">
+                    <label for="nameInput" class="form-label">Patient Name</label>
+                    <input @bind="@Appointment.PName" type="text" class="form-control" id="nameInput" required>
+                </div>
+                <div class="mb-2">
+                    <label for="typeInput"  class="form-label">Patient Age</label>
+                    <input type="text" @bind="@Appointment.PAge" class="form-control" id="typeInput" required>
+                </div>
+                <div class="mb-2">
+                    <label for="genderSelect" class="form-label">Gender</label>
+                         <select class="form-select" id="genderSelect" @onchange="OnGenderChange" required>
+                             @foreach (var item in Genders)
+                                {
+                                 <option value="@item">@item</option>
+                                 }
+                          </select>
+                </div>
+                <div class="mb-2">
+                    <label for="typeInput" class="form-label"> Email</label>
+                    <input type="email" @bind="@Appointment.PEmail" class="form-control" id="typeInput" required>
+                </div>
+                <div class="mb-2">
+                    <label for="dateTimeInput" class="form-label">Date and Time</label>
+                    <input type="datetime" class="form-control" id="dateTimeInput" @bind="AppDateTime" required>
+                </div>
+                <div class="mb-2">
+                    <label for="typeInput" class="form-label">Address</label>
+                    <textarea class="form-control" @bind="@Appointment.Address" id="typeInput" rows="3" required></textarea>
+                </div>
+                <div class="mb-2">
+                    <label for="typeInput" class="form-label">Application Status</label>
+                         <select class="form-select" id="StatusSelect" @onchange="OnStatusChange" required>
+                           @foreach (var item in status)
+                           {
+                                <option value="@item">@item</option>
+                           }
+
+                         </select>
+                </div>
+   
+                 <div class="text-center">
+                    <button type="submit" class="btn btn-primary  "  onclick="@Save">Save</button>
+                </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
+
+@code {
+    [Inject]
+    public ApplicationDbContext DbContext { get; set; }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+    public string[] Cats = new string[] { "", "Blood", "Sugar","Scan",};
+    public string[] Types = new string[] { "", " In Home", "Visit Lab" };
+    public string[] Genders = new string[] { "", "Male", "Female","Others" };
+    public string[] status = new string[] { "", "New", "Existing" };
+
+    private string? SuccessMessage { get; set; }
+    private string? ErrorMessage { get; set; }
+    private bool ShowTypeSelect { get; set; } = true;
+
+    Appointment Appointment = new Appointment();
+
+    private DateTime AppDateTime { get; set; } = DateTime.Now;
+
+
+    protected override void OnInitialized()
+    {
+        
+    }
+
+    private void OnTypeChange(ChangeEventArgs e)
+    {
+        Appointment.Type = e.Value.ToString();
+        ShowTypeSelect = e.Value.ToString() != "Scan";
+        if (!ShowTypeSelect)
+        {
+            Appointment.Type = "Visit Lab";
+        }
+
+    }
+
+    private void OnGenderChange(ChangeEventArgs e)
+    {
+        Appointment.PGender = e.Value.ToString();
+    }
+
+    private void OnCatChange(ChangeEventArgs e)
+    {
+        Appointment.Cat = e.Value.ToString();
+    }
+    private void OnStatusChange(ChangeEventArgs e){
+        Appointment.Status = e.Value.ToString();
+    }
+    public async void Save()
+    {
+       
+            if(Appointment  is not null)
+            {
+                DbContext.Appointments.Add(Appointment);
+                DbContext.SaveChanges();
+           //    await JSRuntime.InvokeVoidAsync("alert", "Your Appointment Id is {Appointment.Id}");
+           
+            }
+     
+        
+
+    }
+
+}

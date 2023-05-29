@@ -1,0 +1,85 @@
+﻿@using BAApp.Model
+@using BAApp.Data
+
+@page "/sample"
+@attribute [Authorize(Roles = "Administrator")]
+        <h3>Sample</h3>
+ <div class="container mt-2 form-container">
+    <div class="row">
+        <div class="col-lg-4 offset-lg-4 pt-1 pb-2 border rounded-lg bg-light shadow">
+             <div class="mb-2">
+                 <label for="typeInput" class="form-label">Appointmentid</label>
+                     <select type="text" class="form-select" id="typeSelect" @onchange="OnAppoinmentChange" required>
+                      @foreach (var item in Appid)
+                          {
+                             <option value="@item">@item</option>
+                          }
+
+                    </select>
+             </div>
+            <div class="mb-2">
+                 <label for="typeInput" class="form-label">Sample</label>
+                     <textarea class="form-control" @bind =@SampleDetail.Sample id="typeInput" rows="3" required></textarea>
+            </div>
+            <div class="mb-2">
+                <label for="typeInput" class="form-label">Results</label>
+                     <textarea class="form-control" @bind=@SampleDetail.Result id="typeInput" rows="3" required></textarea>
+             </div>
+             <div class="text-center">
+               <button type="submit" class="btn btn-primary" onclick="@Save">Save</button>
+             </div>
+            
+         </div>
+    </div>
+ </div>
+
+
+@code {
+    public List<int> Appid { get; set; }
+    [Inject]
+    public ApplicationDbContext DbContext { get; set; }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+    SampleDetail SampleDetail = new SampleDetail();
+
+    public async void Save()
+    {
+        try
+        {
+            if (SampleDetail is not null)
+            {
+                DbContext.SampleDetails.Add(SampleDetail);
+                DbContext.SaveChanges();
+               // await JSRuntime.InvokeVoidAsync("alert", $"save");
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Saved successfully");
+                }
+                catch (JSDisconnectedException)
+                {
+                   
+                    Console.WriteLine("Unable to display the alert. The JavaScript interop is disconnected.");
+                }
+
+            }
+
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Appid = DbContext.Appointments.Select(x => x.Id).ToList();
+    }
+    
+    public void OnAppoinmentChange(ChangeEventArgs e)
+    {
+        SampleDetail.AppointmentId = int.Parse(e.Value.ToString());
+    }
+
+}
